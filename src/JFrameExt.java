@@ -1,5 +1,3 @@
-////To set to cheat mode commit out owner == 1 in gamepiece setShip method  to reveal enemy ships during game play.
-
 import java.applet.*;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -11,6 +9,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URL;
 import java.util.Random;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import java.awt.Toolkit;
@@ -36,6 +36,7 @@ public class JFrameExt extends JFrame implements MouseListener, ActionListener {
 	private MessagePanel messagePanel;
 	private LoadPanel titleScreen;
 	private int cpuShips;
+	private int resultScreen = 0;
 
 	/**
 	 * Launch the application.
@@ -72,7 +73,7 @@ public class JFrameExt extends JFrame implements MouseListener, ActionListener {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 
-		titleScreen = new LoadPanel();
+		titleScreen = new LoadPanel(0);
 		contentPane.add(titleScreen, BorderLayout.CENTER);
 		contentPane.repaint();
 		contentPane.revalidate();
@@ -147,9 +148,11 @@ public class JFrameExt extends JFrame implements MouseListener, ActionListener {
 
 	public void resetGame() {
 		boardSize = 100;
+		gameState = 1;
 		int dim = 10;
 		cpuShips = 10;
 		maxShips = messagePanel.setMaxShips();
+		resultScreen = 0;
 
 		if (scorePanel.getLevel() == 0) {
 			boardSize = 100;
@@ -215,7 +218,15 @@ public class JFrameExt extends JFrame implements MouseListener, ActionListener {
 
 		if (gameState == 2) {
 			if (playerScore == cpuShips) {
-				messagePanel.updateMessage("You are victorous---GAME OVER");
+				{
+					messagePanel.updateMessage("You are victorous---GAME OVER");
+					titleScreen = new LoadPanel(1);
+					contentPane.remove(basePanel);
+					contentPane.add(titleScreen, BorderLayout.CENTER);
+					titleScreen.getStart().addActionListener(this);
+					revalidate();
+					resultScreen = 1;
+				}
 				if (scorePanel.getLevel() == 0)
 					messagePanel.updateScore(1);
 				if (scorePanel.getLevel() == 1)
@@ -223,11 +234,27 @@ public class JFrameExt extends JFrame implements MouseListener, ActionListener {
 				if (scorePanel.getLevel() == 3)
 					messagePanel.updateScore(3);
 			}
-			if (computerScore == maxShips)
+			if (computerScore == maxShips) {
 				messagePanel
-						.updateMessage("You have been defeated---GAME OVER");
+						.updateMessage("You have been defeated--- Enemy surviving ships exposed in yellow ---GAME OVER");
+				titleScreen = new LoadPanel(2);
+				gameBoard.exposeAllShips();
+
+				repaintAll();
+				contentPane.remove(basePanel);
+				contentPane.add(titleScreen, BorderLayout.CENTER);
+				titleScreen.getStart().addActionListener(this);
+				revalidate();
+				resultScreen = 1;
+			}
+
 		}
 		lastPlay = 0;
+
+	}
+
+	private void repaintAll() {
+		// TODO Auto-generated method stub
 
 	}
 
@@ -282,8 +309,8 @@ public class JFrameExt extends JFrame implements MouseListener, ActionListener {
 			pickShips((GamePiece) e.getSource());
 		if (computerScore == maxShips || playerScore == cpuShips)
 			gameState = 2;
-
-		updateMessages();
+		if (resultScreen == 0)
+			updateMessages();
 
 	}
 
@@ -313,8 +340,24 @@ public class JFrameExt extends JFrame implements MouseListener, ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
+
 		// TODO Auto-generated method stub
-		resetGame();
+		JButton temp = (JButton) arg0.getSource();
+		System.out.println("Button is " + temp.getText() + "state is "
+				+ resultScreen);
+		if (temp.getText().compareTo("start") == 0
+				|| temp.getText().compareTo("restart game") == 0)
+			resetGame();
+		if (temp.getText().compareTo("continue") == 0 && resultScreen == 1) {
+			System.out.println("reload is active!!!!");
+			gameBoard.exposeAllShips();
+			contentPane.remove(titleScreen);
+			contentPane.add(basePanel);
+
+			revalidate();
+			repaint();
+			// resultScreen = 0;
+		}
 
 	}
 

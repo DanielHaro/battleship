@@ -91,4 +91,4 @@ public class MessagePanel extends JPanel {
 		changeRank();
 	}
 
-}
+} 
